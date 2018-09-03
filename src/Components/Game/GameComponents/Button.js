@@ -10,6 +10,10 @@ const Button = (props) => {
         props.acceptAnswer();
     }
 
+    const handleRefrechClick = () => {
+        props.handleRefrechClick();
+    }
+
     let button;
 
     switch(props.answerIsCorrect){
@@ -26,8 +30,12 @@ const Button = (props) => {
     }
     
     return (
-        <div className="col-2">
+        <div className="col-2 text-center">
             {button}
+            <br /><br/>
+            <button className="btn btn-warning btn-sm" onClick={handleRefrechClick} disabled={props.redraws === 0}>
+                <i className="fa fa-sync-alt"></i>{"  "+props.redraws}
+            </button>
         </div>
     );
 };

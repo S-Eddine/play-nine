@@ -4,6 +4,8 @@ import Answer from './GameComponents/Answer.js';
 import Button from './GameComponents/Button.js';
 import Numbers from './GameComponents/Numbers.js';
 import _ from 'lodash';
+import DoneFrame from './GameComponents/DoneFrame.js';
+import * as helpers from './../Utils/helpers';
 
 class Game extends Component {
     arrayOfNumber = _.range(1,10);
@@ -12,17 +14,17 @@ class Game extends Component {
         selectedNumbers : [],
         numberOfStars : 1 + Math.floor(Math.random()*9),
         answerIsCorrect : null,
-        usedNumbers : []
+        usedNumbers : [],
+        redraws : 5,
+        doneStatus : null,
     };
     
     selectNumber = (number) => {
         const selectedNumbers = [...this.state.selectedNumbers, number];
         this.setState({selectedNumbers:selectedNumbers, answerIsCorrect:null});
-        console.log("selectNumber");
     }
 
     unselectNumber = (number) => {
-        //this.state.selectedNumbers.splice(this.state.selectedNumbers.indexOf(number), 1);
         const selectedNumbers = this.state.selectedNumbers.filter(number_ => number !== number_);
         this.setState({selectedNumbers:selectedNumbers,answerIsCorrect:null});
     };
@@ -50,22 +52,68 @@ class Game extends Component {
             selectedNumbers: [],
             answerIsCorrect: null,
             numberOfStars : 1 + Math.floor(Math.random()*9),
-        }));
+        }), () => {
+            this.updateDoneStatus()
+        });
     }
 
+    handleRefrechClick = () => {
+        if(this.state.redraws === 0){
+            return ;
+        }
+        this.setState(prevState => ({
+            numberOfStars : 1 + Math.floor(Math.random()*9),
+            selectedNumbers: [],
+            answerIsCorrect: null,
+            redraws : this.state.redraws - 1,
+        }), () => {
+            this.updateDoneStatus();
+        });
+    }
+    updateDoneStatus = () => {
+        this.setState(prevState => {
+            if(prevState.usedNumbers.length === 9){
+                return {doneStatus : "Done. Nice !",}
+            }
+            if(prevState.redraws === 0 && !this.possibleSolution(prevState)){
+                return {doneStatus : "Game Over !",}
+            }
+        }); 
+    }
+
+    possibleSolution = ({numberOfStars, usedNumbers}) => {
+        const possibleNumbers = _.range(1, 10).filter(number => usedNumbers.indexOf(number) === -1);
+        return helpers.possibleCombinationSum(possibleNumbers, numberOfStars);
+    }
+
+    resetGame = () => {
+        this.setState({
+            selectedNumbers : [],
+            numberOfStars : 1 + Math.floor(Math.random()*9),
+            answerIsCorrect : null,
+            usedNumbers : [],
+            redraws : 5,
+            doneStatus : null,
+        })
+    };
+
     render() {
-        const {numberOfStars, selectedNumbers,answerIsCorrect, usedNumbers } = this.state;
+        const {numberOfStars, selectedNumbers,answerIsCorrect, usedNumbers, redraws, doneStatus } = this.state;
         return (
             <div className="container">
-                Play Nine
+                <br />
+                <h1>Play Nine</h1>
                 <hr />
                 <div className="row">
                     <Stars numberOfStars={numberOfStars}/>
-                    <Button checkAnswer={this.checkAnswer} selectedNumbers={selectedNumbers} answerIsCorrect={answerIsCorrect} acceptAnswer={this.acceptAnswer}/>
+                    <Button checkAnswer={this.checkAnswer} selectedNumbers={selectedNumbers} answerIsCorrect={answerIsCorrect} acceptAnswer={this.acceptAnswer} handleRefrechClick={this.handleRefrechClick} redraws={redraws}/>
                     <Answer  selectedNumbers={selectedNumbers} unselectNumber={this.unselectNumber}/>
                 </div>
                 <br />
-                <Numbers selectedNumbers={selectedNumbers} arrayOfNumber={this.arrayOfNumber} selecteNumber={this.selectNumber} usedNumbers={usedNumbers}/>
+                {doneStatus ?
+                    <DoneFrame doneState={doneStatus} resetGame={this.resetGame} /> : <Numbers selectedNumbers={selectedNumbers} arrayOfNumber={this.arrayOfNumber} selecteNumber={this.selectNumber} usedNumbers={usedNumbers}/>
+                }
+                
             </div>
         );
     }
