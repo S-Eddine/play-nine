@@ -6,6 +6,7 @@ import Numbers from './GameComponents/Numbers.js';
 import _ from 'lodash';
 import DoneFrame from './GameComponents/DoneFrame.js';
 import * as helpers from './../Utils/helpers';
+import { connect } from 'react-redux';
 
 class Game extends Component {
     arrayOfNumber = _.range(1,10);
@@ -38,6 +39,7 @@ class Game extends Component {
     }
 
     checkAnswer = () => {
+        console.log(this.state)
         const sum = this.getSumAnswer();
         if(sum === this.state.numberOfStars){
             this.setState({answerIsCorrect: true});
@@ -47,13 +49,19 @@ class Game extends Component {
     }
 
     acceptAnswer = () => {
+        // await this.props.dispatch(gameActions.acceptAnswer({
+        //     usedNumbers : this.state.usedNumbers.concat(this.state.selectedNumbers),
+        //     selectedNumbers: [],
+        //     answerIsCorrect: null,
+        //     numberOfStars : 1 + Math.floor(Math.random()*9),
+        // }));
         this.setState(prevState => ({
             usedNumbers : prevState.usedNumbers.concat(prevState.selectedNumbers),
             selectedNumbers: [],
             answerIsCorrect: null,
             numberOfStars : 1 + Math.floor(Math.random()*9),
         }), () => {
-            this.updateDoneStatus()
+            this.updateDoneStatus();
         });
     }
 
@@ -99,6 +107,7 @@ class Game extends Component {
 
     render() {
         const {numberOfStars, selectedNumbers,answerIsCorrect, usedNumbers, redraws, doneStatus } = this.state;
+       console.log('props', this.props);
         return (
             <div className="container">
                 <br />
@@ -118,5 +127,16 @@ class Game extends Component {
         );
     }
 }
+/*
+    connect(mapStateToProps, mapDispatchToProps) return a function F
+    Then => F(Game)
+*/
 
-export default Game;
+function mapStateToProps(state) {
+    console.log(state);
+    return {
+        game: state.game
+    };
+}
+
+export default connect(mapStateToProps)(Game);
